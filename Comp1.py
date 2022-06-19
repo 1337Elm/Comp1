@@ -1,5 +1,11 @@
-#Benjamin Elm Jonsson 20011117, Independent Programming Work for Course DAT171 at Chalmers Institute of Technology
-#Importing all libraries that are used within the code.
+"""Completion of Computer Assignment 1 for course DAT171, Chalmers Institute of Technology. 
+
+Runnable file that calculates
+shortest distance from a given startnode to a given endnode in one of the following cities: Sample (S), Hungary (H) or Germany (G). 
+There is also a fast(y) or slow(any) version of this program.
+
+Author: Benjamin Elm Jonsson 20011117 (2022) benjamin.elmjonsson@gmail.com
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import math
@@ -9,8 +15,14 @@ import time
 from scipy import spatial
 from matplotlib.collections import LineCollection
 
-#Function that opens the chosen textfile and produces a list of the coordinates with good format for further work.
 def read_coordinate_file(file):
+    """ Opens the chosen textfile, strips data in order to make it useful.
+        Thereafter mercator projection is used and finally the data is put
+        in a Numpy-array that is returned.
+
+        :param file: Chosen File to be analyzed
+        :type file: filename - str
+    """
     R = 1
     coordinates = []
     xMerc = []
@@ -29,8 +41,18 @@ def read_coordinate_file(file):
     coord_list = np.array([yMerc,xMerc])
     return coord_list
 
-#Goes through all the cities from the file and determines what cities are within reach of it. Returns the connections between the cities and that distance.
 def construct_graph_connections(coord_list,radius):
+    """ Goes through all cities and determining which other cities 
+        that can be travelled to. If the connection can be made those
+        cities are saved and a list of the possible connections are
+        returned aswell as the distance between them in two separate lists.
+
+        :param coord_list: List of the coordinates of each city
+        :type coord_list: list, 2D Numpy-array
+
+        :param radius: Maximum range allowed inbetween cities in order to make the connection possible
+        :type radius: int
+    """
     cit1 = []
     cit2 = []
     dista = []
@@ -47,8 +69,18 @@ def construct_graph_connections(coord_list,radius):
     N = len(coord_list[0])
     return indices,distance,N
 
-#Function that determines connections like above but with the cKDTree from scipy for an improvement of performance.
 def construct_fast_graph_connections(coord_list,radius):
+    """Creates a cKDTree in order to determine which cities are
+       lying in reach of the given radius of the selected cities.
+       These are put into Nunpy-arrays to then be returned aswell as
+       distance between the cities.
+
+       :param coord_list: List of the coordinates of each city
+       :type coord_list: list, 2D Numpy-array
+
+       :param radius: Maximum range allowed inbetween cities in order to make the connection possible
+       :type radius: int
+    """
     N = len(coord_list[0])
     cit1 = []
     cit2 = []
@@ -72,8 +104,21 @@ def construct_fast_graph_connections(coord_list,radius):
     distance = np.array(dista)
     return indices,distance,N
 
-#Function that plots the solution: the cities, the connections between them and finally the shortest path found between the chosen start node and end node.
 def plot_points(coord_list,indices,Path):
+    """Plotting the results of the program. 
+       Firstly the cities are plotted as a scatterplot in order to see them individually.
+       Secondly matplotlibs library is used to plot the routes between the cities.
+       Lastly the shortest path is plotted with the matplotlibs library.
+
+       :param coord_list: List of coordinates of each city
+       :type coord_list: list, 2D Numpy-array
+
+       :param indices: 2D list of possible routes between cities
+       :type indices: list, 2D Numpy-array
+
+       :param Path: List of cities from start_node to end_node
+       :type Path: list
+    """
     start5 = time.time()
     x = coord_list[1]
     y = coord_list[0]
@@ -85,7 +130,6 @@ def plot_points(coord_list,indices,Path):
 
     Paths1 = []
     Paths2 = []
-
     for i in range(len(Path)):
         if i<len(Path)-1:
             Paths1.append(Path[i])
@@ -104,17 +148,39 @@ def plot_points(coord_list,indices,Path):
 
     end5 = time.time()
     tid = end5-start5
-
     plt.show()
     return tid
 
-#Turns the connections from earlier to a matrix where the distance from city i to j is the element in the matrix at the coordinates i,j.  
 def construct_graph(indices,distance,N):
+    """Constructing the matrix needed in later functions.
+       The distance between city i and j is the element in the matrix
+       at (i,j). Matrix is of dimension NxN.
+
+       :param indices: 2D list of possible routes between cities
+       :type indices: list, 2D Numpy-array
+       
+       :param distance: list of distances between cities
+       :type distance: list, Numpy-array
+
+       :param N: Total ammount of cities
+       :type N: int
+    """
     Matris = csr_matrix((distance, (indices[1],indices[0])), shape=(N,N)).toarray()
     return Matris
 
-#Finds shortest path with the shortest_path function from scipy.
 def find_shortest_path(graph,start_node,end_node):
+    """Finds the shortest path from start_node to end_node.
+       Returns the path taken and its total distance.
+
+       :param graph: Sparse matrix of distances between cities
+       :type graph: sparse csr matrix
+
+       :param start_node: The city where the journey starts
+       :type start_node: int
+
+       :param end_node: The city where the journey is over
+       :type end_node: int
+    """
     Path = [end_node]
     D,Pr = shortest_path(graph,directed = False,indices= [start_node],return_predecessors=True)
     
@@ -126,8 +192,11 @@ def find_shortest_path(graph,start_node,end_node):
     Path.reverse()
     return Path,D[0][end_node]
 
-#Main programme that calls the functions above. Also here the file is chosen. Furthermore all times are recorded for the individual functions
 def main():
+    """The main programme which calls the other functions.
+       The file is also chosen, furthermore are the timings 
+       recorded.
+    """
     ans = input("Would you like to use Sample, Hungary or Germany?")
     if ans == "S":
         file = "/Users/benjaminjonsson/Programmering/Comp1/SampleCoordinates.txt"
@@ -183,6 +252,7 @@ def main():
         print(f"find_shortest_path: {end4-start4}")
         print(f"plot_points exkl. plt.show(): {Tid}")
 
-#Determines that this is a runnable file.
 if __name__== '__main__':
+    """Determines that the file is runnable, initiates the programme.
+    """
     main()
